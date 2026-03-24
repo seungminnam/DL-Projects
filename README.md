@@ -1,6 +1,6 @@
-# DL-CNN-Projects
+# DL-Projects
 
-A progressive series of CNN projects built with **PyTorch**, going from scratch implementations to real-world datasets.  
+A progressive series of deep learning projects built with **PyTorch**, going from scratch CNN implementations to Transfer Learning and beyond (RNN, GAN planned).
 Each project is self-contained with its own notebook, scripts, results, and README documenting design decisions.
 
 ---
