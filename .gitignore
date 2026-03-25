@@ -13,6 +13,10 @@ CLAUDE.md
 .agent
 .agents
 .claude
+docs/superpowers/
+**/docs/
+skills-lock.json
+AGENTS.md
 
 # OS
 .DS_Store
