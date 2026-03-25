@@ -1,4 +1,4 @@
-# Data (too large for git)
+# Data & model weights
 data/
 *.pth
 
@@ -8,17 +8,17 @@ __pycache__/
 .ipynb_checkpoints/
 .venv/
 
-# Claude
+# IDE & tool config
 CLAUDE.md
+AGENTS.md
 .agent
 .agents
 .claude
-docs/superpowers/
-**/docs/
 skills-lock.json
-AGENTS.md
+
+# Internal docs
+**/docs/design.md
+**/docs/plan.md
 
 # OS
 .DS_Store
-
-
