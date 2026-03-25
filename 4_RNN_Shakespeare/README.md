@@ -112,6 +112,22 @@ These limitations stem from the **vanishing gradient problem**. During BPTT, gra
 
 ---
 
+## Lessons Learned
+
+**One-hot encoding is intentionally naive.** Each character becomes a sparse 65-dim vector with no notion of similarity. This forces the RNN to learn all character relationships from scratch — good for understanding, but inefficient. The next step (LSTM project) introduces `nn.Embedding`, which learns dense representations where similar characters naturally cluster.
+
+**Gradient clipping isn't optional for vanilla RNNs.** During BPTT, gradients are multiplied by W_hh at each of the 100 timesteps. Without `clip_grad_norm_`, training diverges within a few epochs — loss explodes to infinity. This is the exploding gradient problem in practice, not just theory.
+
+**Temperature is just division before softmax.** `logits / T` before softmax — that's the entire trick. Low T sharpens the distribution (safe, repetitive), high T flattens it (creative, chaotic). At T=0.5 the model produces coherent Shakespeare; at T=1.5 it's mostly gibberish. This single parameter controls the diversity-quality tradeoff in all language generation.
+
+**Custom Datasets are simpler than expected.** Coming from `torchvision.datasets` which handles everything, building `ShakespeareDataset` with just `__len__` and `__getitem__` was straightforward. The key insight: the DataLoader doesn't care what's inside — it just needs to know how many samples exist and how to fetch one by index.
+
+**Perplexity makes loss interpretable.** A loss of 1.85 is hard to reason about. But perplexity of 6.33 means "the model is choosing between ~6 characters" — immediately intuitive, and directly comparable across different models and datasets.
+
+**The RNN's failures are as instructive as its successes.** It learns spelling, formatting, and short phrases well. But longer words break down and sentences lose coherence — because the hidden state is a single vector trying to compress all past context. This limitation isn't a bug to fix with more training; it's a fundamental architectural constraint that LSTM addresses with explicit memory gates.
+
+---
+
 ## How to Run
 
 ```bash
