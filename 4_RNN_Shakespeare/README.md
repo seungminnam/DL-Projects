@@ -1,6 +1,6 @@
 # 4. RNN Shakespeare — Character-Level Text Generation
 
-**Visual Summary**: [Open the browser-friendly project summary](https://immagodgivenmasterpiece.github.io/DL-Projects/4_RNN_Shakespeare/summary.html)
+**Visual Summary**: [Open the browser-friendly project summary](https://seungminnam.github.io/DL-Projects/4_RNN_Shakespeare/summary.html)
 
 ## Why RNNs?
 

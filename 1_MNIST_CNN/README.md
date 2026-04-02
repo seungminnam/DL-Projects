@@ -3,7 +3,7 @@
 A from-scratch CNN implementation in **PyTorch** that classifies handwritten digits (0–9) from the MNIST dataset.  
 Built as the first project in a progressive CNN learning series.
 
-**Visual Summary**: [Open the browser-friendly project summary](https://immagodgivenmasterpiece.github.io/DL-Projects/1_MNIST_CNN/summary.html)
+**Visual Summary**: [Open the browser-friendly project summary](https://seungminnam.github.io/DL-Projects/1_MNIST_CNN/summary.html)
 
 ---
 

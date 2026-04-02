@@ -2,7 +2,7 @@
 
 A progressive CNN experiment on **CIFAR-10** (32x32 color images, 10 classes), exploring the impact of **Batch Normalization** and **LR Scheduling** on a from-scratch architecture.
 
-**Visual Summary**: [Open the browser-friendly project summary](https://immagodgivenmasterpiece.github.io/DL-Projects/2_CIFAR10_CNN/summary.html)
+**Visual Summary**: [Open the browser-friendly project summary](https://seungminnam.github.io/DL-Projects/2_CIFAR10_CNN/summary.html)
 
 ---
 

@@ -20,11 +20,11 @@ Each project is self-contained with its own notebook, scripts, results, and READ
 
 Browser-friendly summary pages are available through GitHub Pages:
 
-- [Summary Hub](https://immagodgivenmasterpiece.github.io/DL-Projects/)
-- [MNIST CNN Summary](https://immagodgivenmasterpiece.github.io/DL-Projects/1_MNIST_CNN/summary.html)
-- [CIFAR-10 CNN Summary](https://immagodgivenmasterpiece.github.io/DL-Projects/2_CIFAR10_CNN/summary.html)
-- [Sports Classification Summary](https://immagodgivenmasterpiece.github.io/DL-Projects/3_Transfer_Learning/summary.html)
-- [RNN Shakespeare Summary](https://immagodgivenmasterpiece.github.io/DL-Projects/4_RNN_Shakespeare/summary.html)
+- [Summary Hub](https://seungminnam.github.io/DL-Projects/)
+- [MNIST CNN Summary](https://seungminnam.github.io/DL-Projects/1_MNIST_CNN/summary.html)
+- [CIFAR-10 CNN Summary](https://seungminnam.github.io/DL-Projects/2_CIFAR10_CNN/summary.html)
+- [Sports Classification Summary](https://seungminnam.github.io/DL-Projects/3_Transfer_Learning/summary.html)
+- [RNN Shakespeare Summary](https://seungminnam.github.io/DL-Projects/4_RNN_Shakespeare/summary.html)
 
 The project `README.md` files remain the main written documentation. These summary pages are supplementary visual walkthroughs.
 If these links do not load yet, enable GitHub Pages in the repository settings using the `main` branch and the repository root (`/`) as the source.
