@@ -6,24 +6,32 @@
 <title>Project 1: MNIST CNN Summary</title>
 <style>
   :root {
-    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
-    --accent: #3b82f6; --accent2: #8b5cf6; --accent3: #06b6d4;
-    --green: #22c55e; --yellow: #eab308; --red: #ef4444;
-    --text: #f1f5f9; --text2: #94a3b8; --text3: #64748b;
-    --border: #475569;
+    --bg: #f7f4ed; --surface: rgba(255,255,255,0.88); --surface2: #f4ede1;
+    --accent: #567bb8; --accent2: #8e73b8; --accent3: #4f90a6;
+    --green: #2f8f5c; --yellow: #b68a1f; --red: #c65149;
+    --text: #1e2430; --text2: #596273; --text3: #7a7f8a;
+    --border: #d8cfbf; --shadow: 0 18px 40px rgba(50, 41, 28, 0.10);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  body {
+    font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(circle at top left, #fff6e4 0%, transparent 34%),
+      radial-gradient(circle at top right, #e8f0ff 0%, transparent 28%),
+      linear-gradient(180deg, #f6f1e7 0%, #f3eee6 100%);
+    color: var(--text);
+    line-height: 1.6;
+  }
 
   /* Hero */
-  .hero { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #1a1040 100%); padding: 60px 40px; text-align: center; border-bottom: 1px solid var(--border); }
+  .hero { background: var(--surface); padding: 56px 40px; text-align: center; border: 1px solid rgba(216, 207, 191, 0.8); border-radius: 28px; box-shadow: var(--shadow); max-width: 1100px; margin: 28px auto 0; }
   .hero .badge { display: inline-block; background: var(--accent); color: #fff; padding: 4px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
   .hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 8px; }
   .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .hero .subtitle { color: var(--text2); font-size: 1.15rem; max-width: 600px; margin: 0 auto; }
 
   /* Stats bar */
-  .stats-bar { display: flex; justify-content: center; gap: 40px; padding: 32px 40px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .stats-bar { display: flex; justify-content: center; gap: 40px; padding: 32px 40px; background: var(--surface); border: 1px solid rgba(216, 207, 191, 0.8); border-radius: 22px; box-shadow: var(--shadow); flex-wrap: wrap; max-width: 1100px; margin: 18px auto 0; }
   .stat { text-align: center; }
   .stat .num { font-size: 2rem; font-weight: 800; }
   .stat .num.blue { color: var(--accent); }
@@ -40,7 +48,7 @@
   .section h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); display: inline-block; }
 
   /* Cards */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+  .card { background: var(--surface); border: 1px solid rgba(216, 207, 191, 0.8); border-radius: 18px; padding: 28px; margin-bottom: 20px; box-shadow: var(--shadow); }
   .card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 12px; color: var(--accent3); }
 
   /* Architecture */
@@ -99,7 +107,7 @@
   .concept-body .why-here p { margin-bottom: 0; }
 
   /* Sticky Nav */
-  .nav { position: sticky; top: 0; z-index: 100; background: rgba(15,23,42,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; gap: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .nav { position: sticky; top: 0; z-index: 100; background: rgba(247,244,237,0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; gap: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
   .nav::-webkit-scrollbar { display: none; }
   .nav a { color: var(--text3); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 12px 14px; transition: color 0.15s, box-shadow 0.15s; flex-shrink: 0; }
   .nav a:hover { color: var(--text); }

@@ -1,6 +1,6 @@
 # DL-Projects
 
-A progressive series of deep learning projects built with **PyTorch**, going from scratch CNN implementations to Transfer Learning and beyond (RNN, GAN planned).
+A progressive series of deep learning projects built with **PyTorch**, going from scratch CNN implementations to Transfer Learning, RNNs, and beyond (GAN planned).
 Each project is self-contained with its own notebook, scripts, results, and README documenting design decisions.
 
 ---
@@ -13,6 +13,7 @@ Each project is self-contained with its own notebook, scripts, results, and READ
 | 2 | [CIFAR-10 CNN](./2_CIFAR10_CNN/) | CIFAR-10 (10 classes) | 81.04% acc | BatchNorm, LR Scheduler | ✅ Done |
 | 3 | [Sports Classification](./3_Transfer_Learning/) | Sports (100 classes) | 96–98% acc | ResNet18 Transfer Learning | ✅ Done |
 | 4 | [RNN Shakespeare](./4_RNN_Shakespeare/) | Tiny Shakespeare | 6.33 PPL | Vanilla RNN, Gradient Clipping | ✅ Done |
+| 5 | [LSTM Sentiment](./5_LSTM_Sentiment/) | IMDB (movie reviews) | 81.91% acc (v1) | LSTM, Packed Sequence, Word Embeddings | 🔄 In Progress |
 
 ---
 
@@ -25,6 +26,7 @@ Browser-friendly summary pages are available through GitHub Pages:
 - [CIFAR-10 CNN Summary](https://seungminnam.github.io/DL-Projects/2_CIFAR10_CNN/summary.html)
 - [Sports Classification Summary](https://seungminnam.github.io/DL-Projects/3_Transfer_Learning/summary.html)
 - [RNN Shakespeare Summary](https://seungminnam.github.io/DL-Projects/4_RNN_Shakespeare/summary.html)
+- [LSTM Sentiment Summary](https://seungminnam.github.io/DL-Projects/5_LSTM_Sentiment/summary.html)
 
 The project `README.md` files remain the main written documentation. These summary pages are supplementary visual walkthroughs.
 If these links do not load yet, enable GitHub Pages in the repository settings using the `main` branch and the repository root (`/`) as the source.
@@ -38,9 +40,10 @@ If these links do not load yet, enable GitHub Pages in the repository settings u
 2_CIFAR10_CNN       → BatchNorm, LR Scheduler, scratch CNN ceiling       → 81.04%
 3_Transfer_Learning → ResNet18 freeze → fine-tune, 100-class real data   → 96–98%
 4_RNN_Shakespeare   → Vanilla RNN, hidden states, BPTT, text generation  → 6.33 PPL
+5_LSTM_Sentiment    → LSTM, embeddings, packed sequences, sentiment       → 81.91%
 ```
 
-The narrative: scratch CNNs hit a ceiling at ~81% on CIFAR-10. Transfer Learning with a pretrained ResNet18 broke through to 96–98% on a harder 100-class problem. Then we moved beyond images to **sequential data** — a vanilla RNN learned to generate Shakespeare character-by-character, but its short-term memory limitations motivate the next step: LSTM.
+The narrative: scratch CNNs hit a ceiling at ~81% on CIFAR-10. Transfer Learning with a pretrained ResNet18 broke through to 96–98% on a harder 100-class problem. Then we moved beyond images to **sequential data** — a vanilla RNN learned to generate Shakespeare character-by-character, but its short-term memory limitations motivated the next step: an LSTM that reads full IMDB reviews and classifies sentiment at the sequence level.
 
 Each project answers:
 - What limitation did the previous project hit?
@@ -64,6 +67,9 @@ Each project answers:
 - Gradient clipping for BPTT stability
 - Temperature-controlled text generation
 - Perplexity as evaluation metric for language models
+- LSTM sequence classification with learned word embeddings
+- Packed sequences and dynamic padding for variable-length text
+- Hugging Face `datasets` for NLP pipelines
 
 ---
 
