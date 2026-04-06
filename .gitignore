@@ -21,6 +21,7 @@ skills-lock.json
 **/docs/plan.md
 HANDOFF.md
 *.local.md
+ROADMAP*.local.md
 
 # OS
 .DS_Store

@@ -13,7 +13,7 @@ Each project is self-contained with its own notebook, scripts, results, and READ
 | 2 | [CIFAR-10 CNN](./2_CIFAR10_CNN/) | CIFAR-10 (10 classes) | 81.04% acc | BatchNorm, LR Scheduler | ✅ Done |
 | 3 | [Sports Classification](./3_Transfer_Learning/) | Sports (100 classes) | 96–98% acc | ResNet18 Transfer Learning | ✅ Done |
 | 4 | [RNN Shakespeare](./4_RNN_Shakespeare/) | Tiny Shakespeare | 6.33 PPL | Vanilla RNN, Gradient Clipping | ✅ Done |
-| 5 | [LSTM Sentiment](./5_LSTM_Sentiment/) | IMDB (movie reviews) | 84.48% acc (v2 GloVe) | LSTM, Packed Sequence, Pretrained GloVe | 🔄 In Progress |
+| 5 | [LSTM Sentiment](./5_LSTM_Sentiment/) | IMDB (movie reviews) | 84.48% acc (v2 GloVe) | LSTM, Packed Sequence, GloVe Freeze-vs-Trainable | ✅ Done |
 
 ---
 
@@ -40,7 +40,7 @@ If these links do not load yet, enable GitHub Pages in the repository settings u
 2_CIFAR10_CNN       → BatchNorm, LR Scheduler, scratch CNN ceiling       → 81.04%
 3_Transfer_Learning → ResNet18 freeze → fine-tune, 100-class real data   → 96–98%
 4_RNN_Shakespeare   → Vanilla RNN, hidden states, BPTT, text generation  → 6.33 PPL
-5_LSTM_Sentiment    → LSTM, GloVe embeddings, packed sequences, sentiment → 84.48%
+5_LSTM_Sentiment    → LSTM, GloVe init/freeze-vs-trainable, sentiment     → 84.48%
 ```
 
 The narrative: scratch CNNs hit a ceiling at ~81% on CIFAR-10. Transfer Learning with a pretrained ResNet18 broke through to 96–98% on a harder 100-class problem. Then we moved beyond images to **sequential data** — a vanilla RNN learned to generate Shakespeare character-by-character, but its short-term memory limitations motivated the next step: an LSTM that reads full IMDB reviews and classifies sentiment at the sequence level.
@@ -49,6 +49,20 @@ Each project answers:
 - What limitation did the previous project hit?
 - What new technique addresses it?
 - How much did it improve, and why?
+
+---
+
+## Near-Term Direction
+
+The next planned steps for this repo are:
+
+- move into a **Transformer from scratch** project
+- then add a small **LLM fine-tuning** project
+
+This repo will stay focused on model-learning and experiment-driven deep learning work.
+More systems-heavy LLM work such as **vLLM serving**, **RAG pipelines**, and
+full app-style workflows will likely live in a separate repo later so the
+portfolio story here stays clean.
 
 ---
 
@@ -70,6 +84,7 @@ Each project answers:
 - LSTM sequence classification with learned and pretrained word embeddings
 - Packed sequences and dynamic padding for variable-length text
 - GloVe initialization for NLP transfer-style experiments
+- Frozen-vs-trainable comparison for pretrained embedding adaptation
 - Hugging Face `datasets` for NLP pipelines
 
 ---

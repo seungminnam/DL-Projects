@@ -4,10 +4,11 @@ Binary sentiment classification on **IMDB movie reviews** using a **single-layer
 
 This project is the next step after the vanilla RNN Shakespeare project: instead of predicting the next character, the model now reads an entire review and predicts a single label: **positive** or **negative**.
 
-The project now has two versions:
+The project now has three versions:
 
 - **v1**: learned embeddings from scratch
-- **v2**: pretrained **GloVe** initialization with the rest of the training setup kept fixed
+- **v2**: pretrained **GloVe** initialization with trainable embeddings
+- **v3**: pretrained **GloVe** initialization with frozen embeddings
 
 ---
 
@@ -53,7 +54,7 @@ This project also introduces **word embeddings**, so words are no longer represe
   - `0 = negative`
   - `1 = positive`
 
-This is intentionally simple and educational. The point of v1 was to understand sequence modeling, padding, embeddings, and LSTM training before moving on to pretrained embeddings in v2.
+This is intentionally simple and educational. The point of v1 was to understand sequence modeling, padding, embeddings, and LSTM training before moving on to pretrained embeddings in v2 and a frozen-vs-trainable comparison in v3.
 
 ---
 
@@ -70,7 +71,7 @@ Input (N, seq_len_in_batch)              # word indices
 
 | Component | Spec |
 |----------|------|
-| Embedding | `nn.Embedding(vocab_size, 100, padding_idx=0)` in v1, `nn.Embedding.from_pretrained(...)` in v2 |
+| Embedding | `nn.Embedding(vocab_size, 100, padding_idx=0)` in v1, `nn.Embedding.from_pretrained(...)` in v2/v3 |
 | LSTM | `nn.LSTM(100, 256, num_layers=1, batch_first=True)` |
 | Classifier | `nn.Linear(256, 1)` |
 | Loss | `BCEWithLogitsLoss` |
@@ -141,6 +142,19 @@ That made the next step very natural:
 
 That is the text analogue of Project 3's transfer learning story. Instead of importing image features from a pretrained ResNet, v2 imports **word-level semantic structure** from pretrained GloVe vectors.
 
+### 5. Why v3 froze GloVe
+
+v2 improved the baseline, but it still mixed two effects together:
+
+- the value of starting from pretrained word vectors
+- the value of fine-tuning those vectors for IMDB sentiment
+
+So v3 keeps the same GloVe initialization but freezes the embedding layer.
+
+That turns v3 into a clean ablation:
+
+> How much of the gain comes from pretrained semantic priors alone, and how much comes from adapting them to the task?
+
 ---
 
 ## Version Progression
@@ -149,6 +163,7 @@ That is the text analogue of Project 3's transfer learning story. Instead of imp
 |-------|-------|-------|-------|-------|-------|-------|
 | **v1** | learned embeddings from scratch | 0.4376 | 83.08% | 0.4587 | 81.91% | packed sequence + dynamic padding baseline |
 | **v2_glove** | initialize embeddings from GloVe (63.25% vocab coverage) | 0.3533 | 86.68% | 0.3692 | 84.48% | +2.57%p over v1 |
+| **v3_glove_frozen** | same GloVe initialization, but freeze the embedding layer | 0.3603 | 84.96% | 0.3680 | 83.62% | +1.71%p over v1, but below v2 |
 
 ### What v1 taught
 
@@ -176,11 +191,37 @@ The answer was meaningful:
 - test accuracy improved from **81.91%** to **84.48%**
 - the model started stronger in the very first epochs and generalized better overall
 
+### What v2 taught
+
+v2 established that pretrained embeddings really mattered:
+
+- even with the same LSTM classifier, training became stronger much earlier
+- the model reduced the false-positive bias seen in v1
+- the gain was large enough to be clearly meaningful, not just noise
+
+But one question still remained:
+
+> Was the improvement coming mostly from pretrained semantics, or from fine-tuning those semantics for IMDB?
+
+That led directly to v3.
+
+### Why that led to v3
+
+v3 changed only one thing relative to v2:
+
+- `freeze_embeddings=False` in v2
+- `freeze_embeddings=True` in v3
+
+This made the final comparison very clean:
+
+- **v3 frozen** still beat v1, so pretrained vectors help even without adaptation
+- **v2 trainable** stayed best, so task-specific fine-tuning adds another real gain
+
 ---
 
 ## Results
 
-### Current Best Result (v2: GloVe)
+### Current Best Result (v2: GloVe + trainable)
 
 | Metric | Value |
 |-------|-------|
@@ -192,6 +233,18 @@ The answer was meaningful:
 | Early Stopping | epoch 6 |
 
 This is a meaningful step up from the v1 baseline while keeping the rest of the architecture and training setup fixed.
+
+### Frozen vs Trainable GloVe
+
+| Version | Embedding Policy | Best Val Acc | Test Acc | Interpretation |
+|-------|-------|-------|-------|-------|
+| **v2_glove** | pretrained + trainable | 86.68% | 84.48% | best overall result |
+| **v3_glove_frozen** | pretrained + frozen | 84.96% | 83.62% | still better than v1, but worse than v2 |
+
+This is the clearest final conclusion of Project 5:
+
+- pretrained embeddings help on their own
+- but allowing those embeddings to adapt to the sentiment task works better than freezing them
 
 ### Training Curves
 
@@ -235,13 +288,28 @@ So v2 is less easily fooled by local positive words inside negative reviews. The
 
 That pattern also appears in the qualitative error analysis below.
 
+For comparison, the frozen v3 model produced:
+
+```text
+[[10793, 1707],
+ [ 2387, 10113]]
+```
+
+That is a useful tradeoff to notice:
+
+- false positives dropped a bit further (`1815 -> 1707`)
+- false negatives rose more noticeably (`2066 -> 2387`)
+
+So freezing GloVe made the classifier a bit more conservative. It became less eager to predict positive, but that extra caution cost too many missed positives, which is why v3 finished below v2 overall.
+
 ---
 
 ## Wrong Prediction Analysis
 
-See the full text report here:
+See the full text reports here:
 
-- [Wrong Prediction Report](results/v2_glove/wrong_predictions.md)
+- [v2 Wrong Prediction Report](results/v2_glove/wrong_predictions.md)
+- [v3 Wrong Prediction Report](results/v3_glove_frozen/wrong_predictions.md)
 
 The qualitative errors changed in a useful way from v1 to v2.
 
@@ -276,6 +344,11 @@ GloVe helped the model understand word meaning better, but it still struggles wi
 - contrastive phrasing
 - reviews where topic vocabulary and final sentiment do not align cleanly
 
+The v3 report adds one more lesson:
+
+- frozen embeddings are still useful
+- but they miss more subtle positive reviews than the trainable v2 model
+
 ---
 
 ## What Changed vs Project 4?
@@ -299,10 +372,13 @@ The shift is not just from one architecture to another. It is also a shift from 
 The first implementation looked reasonable but produced almost random performance because the final hidden state was taken after long padding tails. Packed sequences fixed the real problem.
 
 **A fair comparison is worth preserving.**  
-v2 kept the split, optimizer, learning rate, patience, epoch ceiling, and LSTM architecture fixed. That makes the gain from GloVe much easier to interpret honestly.
+v2 and v3 kept the split, optimizer, learning rate, patience, epoch ceiling, and LSTM architecture fixed. That makes the embedding comparison much easier to interpret honestly.
 
 **Pretrained embeddings gave a real head start.**  
-GloVe covered 63.25% of the vocabulary and improved test accuracy by **+2.57%p**. The model started stronger in the earliest epochs and ended with a clearly better final result.
+GloVe covered 63.25% of the vocabulary. Both pretrained versions beat the scratch baseline, and the trainable version produced the best overall result.
+
+**Frozen pretrained features help, but task adaptation helps more.**  
+v3 still improved over v1, which shows that pretrained semantics matter on their own. But v2 stayed ahead, which shows that adapting those vectors to the sentiment task adds another meaningful gain.
 
 **The right metric depends on the task.**  
 Perplexity was meaningful for next-character prediction. For IMDB sentiment, the right tools are loss, accuracy, confusion matrix, and qualitative error analysis.
@@ -318,23 +394,19 @@ v1 showed a clear false-positive bias. v2 reduced that bias, but the wrong-predi
 
 ---
 
-## What's Next
+## Closing Project 5
 
-Now that v2 has shown a meaningful gain from pretrained word vectors, the next question is no longer "should we use pretrained embeddings?" but rather:
-
-> what should the next version change while keeping the comparison interpretable?
-
-The most natural candidates are:
-
-- compare **frozen vs trainable** GloVe embeddings
-- test a **bidirectional LSTM**
-- try a slightly stronger tokenizer or vocabulary policy
-
-The important part is to keep the version story clean:
+Project 5 now has a clean three-step story:
 
 - **v1** taught that padding correctness was essential
-- **v2** showed that better word representations improved generalization
-- the next version should isolate one new idea just as clearly
+- **v2** showed that pretrained word representations improved generalization
+- **v3** showed that frozen embeddings still help, but trainable GloVe works best
+
+That makes this a good stopping point for the LSTM project from a portfolio perspective. The next strong question is no longer inside LSTM itself. It is:
+
+> what architecture should replace recurrence as the next major sequence-modeling step?
+
+That leads naturally to the next project: **Transformer from scratch**.
 
 ## How to Run
 
@@ -350,9 +422,16 @@ python scripts/train_v2_glove.py
 
 # Resume v2
 python scripts/train_v2_glove.py --resume-from results/v2_glove/best_model.pth
+
+# Run v3 with frozen GloVe embeddings
+python scripts/train_v3_glove_frozen.py
+
+# Resume v3
+python scripts/train_v3_glove_frozen.py --resume-from results/v3_glove_frozen/best_model.pth
 ```
 
 Artifacts are saved to version-specific folders:
 
 - `results/v1/`
 - `results/v2_glove/`
+- `results/v3_glove_frozen/`

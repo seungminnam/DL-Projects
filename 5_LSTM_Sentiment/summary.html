@@ -150,7 +150,7 @@
 <div class="hero">
   <div class="badge">Project 5 of 5</div>
   <h1><span>LSTM Sentiment</span></h1>
-  <p class="subtitle">IMDB review classification with a packed LSTM baseline in v1 and pretrained GloVe embeddings in v2. This page tracks the move from sequence generation to sequence understanding, then from scratch word representations to transferred semantic priors.</p>
+  <p class="subtitle">IMDB review classification with a packed LSTM baseline in v1, trainable GloVe embeddings in v2, and frozen GloVe embeddings in v3. This page closes the sequence-modeling story by comparing scratch, pretrained-trainable, and pretrained-frozen word representations.</p>
 </div>
 
 <div class="stats-bar">
@@ -247,8 +247,10 @@
         <tr><th>Version</th><th>Main Change</th><th>Best Val Acc</th><th>Test Acc</th><th>Interpretation</th></tr>
         <tr><td>v1</td><td>Learn embeddings from scratch</td><td>83.08%</td><td>81.91%</td><td>Packed sequences made the baseline viable</td></tr>
         <tr><td>v2_glove</td><td>Initialize embeddings from pretrained GloVe</td><td>86.68%</td><td>84.48%</td><td>Better word representations improved early learning and final accuracy</td></tr>
+        <tr><td>v3_glove_frozen</td><td>Keep the same GloVe vectors frozen</td><td>84.96%</td><td>83.62%</td><td>Pretrained features help, but fine-tuning still works better</td></tr>
       </table>
-      <p style="color: var(--text2); margin-top: 14px;">This comparison is intentionally fair: same split, same sequence length, same hidden size, same optimizer, same learning rate, and the same <code>EPOCHS=15 / PATIENCE=3</code>. The main change in v2 is the embedding initialization.</p>
+      <p style="color: var(--text2); margin-top: 14px;">This comparison is intentionally fair: same split, same sequence length, same hidden size, same optimizer, same learning rate, and the same <code>EPOCHS=15 / PATIENCE=3</code>. The only experiment axis in v2/v3 is what happens to the GloVe embedding layer after initialization.</p>
+      <p style="color: var(--text2); margin-top: 12px;">The final takeaway is clean: frozen GloVe still beats the scratch baseline, but trainable GloVe gives the strongest result overall.</p>
     </div>
     <div class="img-grid">
       <div class="img-card">
@@ -274,12 +276,12 @@
           <tr><td>False Negative</td><td>2,066</td></tr>
           <tr><td>True Positive</td><td>10,434</td></tr>
         </table>
-        <p style="color: var(--text2); margin-top: 12px;">The key shift from v1 is that false positives fall from 2,512 to 1,815. False negatives rise only slightly, so the model becomes less overly optimistic and more balanced overall.</p>
+        <p style="color: var(--text2); margin-top: 12px;">The key shift from v1 to v2 is that false positives fall from 2,512 to 1,815. In v3, they fall a bit further to 1,707, but false negatives rise to 2,387. That means freezing GloVe makes the model more conservative, which is useful to see but not the best overall tradeoff.</p>
       </div>
       <div class="card">
         <h3>Qualitative Pattern</h3>
         <p style="color: var(--text2);">False positives still exist, but in v2 they are more concentrated in genre-heavy action or franchise reviews where local praise language is strong even though the final judgment is negative.</p>
-        <p style="color: var(--text2);">False negatives now stand out more clearly in formal, socially serious, or thematically heavy reviews whose wording feels negative even when the final verdict is positive.</p>
+        <p style="color: var(--text2);">False negatives stand out more clearly in formal, socially serious, or thematically heavy reviews whose wording feels negative even when the final verdict is positive. v3 reinforces this pattern even more, which fits the idea that frozen embeddings adapt less well to subtle task-specific sentiment cues.</p>
         <div class="error-grid">
           <div class="error-panel">
             <h4>False Positives</h4>
@@ -531,6 +533,11 @@
     </div>
 
     <div class="lesson">
+      <div class="lesson-title">Frozen pretrained features are useful, but trainable ones are better here</div>
+      <div class="lesson-body">v3 still beat the scratch baseline, which shows that pretrained semantics help by themselves. But the best result came from letting GloVe adapt to the IMDB task, not from keeping it fixed.</div>
+    </div>
+
+    <div class="lesson">
       <div class="lesson-title">Simple preprocessing still teaches core NLP ideas</div>
       <div class="lesson-body">Whitespace tokenization and a top-25k vocabulary are not fancy, but they are enough to make vocab building, unknown tokens, padding, variable-length handling, and sequence summarization concrete.</div>
     </div>
@@ -559,7 +566,7 @@
   <div class="section">
     <h2>What's Next</h2>
     <div class="card">
-      <p style="color: var(--text2);">v2 showed that pretrained GloVe embeddings matter. The next question is no longer whether transfer helps, but <strong style="color: var(--text);">which next change should be isolated cleanly</strong>: freeze vs trainable GloVe, a bidirectional LSTM, or a stronger tokenization setup.</p>
+      <p style="color: var(--text2);">Project 5 now has a clean final story: padding correctness mattered, pretrained embeddings helped, and trainable GloVe beat frozen GloVe. That makes this a strong stopping point for the LSTM project, and the next natural move is <strong style="color: var(--text);">Transformer from scratch</strong>.</p>
     </div>
   </div>
 
