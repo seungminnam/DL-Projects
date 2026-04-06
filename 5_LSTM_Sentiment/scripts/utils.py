@@ -223,6 +223,71 @@ def get_dataloaders(batch_size=64, max_len=256, max_vocab=25000):
     print(f"Train: {len(train_dataset):,} | Val: {len(val_dataset):,} | Test: {len(test_dataset):,}")
     return train_loader, val_loader, test_loader, word_to_idx, idx_to_word
 
+def load_glove(glove_path, word_to_idx, embed_dim=100):
+    """
+    Build an embedding matrix from a GloVe file.
+
+    For each word in our vocabulary, if GloVe has a vector for it,
+    use that vector. Otherwise, initialize randomly.
+
+    This is the text equivalent of loading pretrained ResNet weights
+    in Project 3 — we start with knowledge someone else learned.
+
+    Returns torch tensor of shape (vocab_size, embed_dim).
+    """
+    vocab_size = len(word_to_idx) #row size of embedding row (e.g. 25,002 vocab -> 25,002 em row)
+    
+
+    # Step 1: start with random vectors for eveyr vocab word
+    embedding_matrix = np.random.normal(
+        loc=0.0,
+        scale=0.6,
+        size=(vocab_size, embed_dim),
+    ).astype(np.float32)
+    # known word -> pretrained vector
+    # unknown/missing word -> random vector
+
+    # Step 2. keeping padding as a zero vector (<pad> is not an actual vocab)
+    embedding_matrix[PAD_IDX] = np.zeros(embed_dim, dtype=np.float32)
+
+    found = 0
+
+    # Step 3. read the GloVe text file line by line
+    with open(glove_path, "r", encoding="utf-8") as f:
+        for line in f:
+            #split line by space
+            parts = line.strip().split()
+
+            # Skip empty / malformed lines
+            if not parts:
+                continue
+            
+            # e.g. the 0.418 0.24968 -0.41242 ...
+            # parts[0] = "the"
+            # parts[1:] = remaining numbers
+            word = parts[0]
+            vector = parts[1:]
+
+            # Step 4: only keep rows with the expected embedding dimension 
+            # we're using 100d GloVe -> skip lines that the vector length isn't 100
+            if len(vector) != embed_dim:
+                continue
+
+            # Step 5: if this GloVe word exists in our vocab, overwrite that row
+            # among enormous GloVe vocab, we only needs vocab that is in our word
+            # instead of saving the entire GloVe, picking the word we need in our vocab row. 
+            if word in word_to_idx:
+                idx = word_to_idx[word]
+                #vector is still a String list -> us asarray() to make it float array
+                embedding_matrix[idx] = np.asarray(vector, dtype=np.float32)
+                found += 1
+    
+    coverage = found / vocab_size * 100
+    print(f"GloVe matched {found:,} / {vocab_size:,} words ({coverage:.2f}%)")
+
+    # Return torch tensor so model.py can use it directly with from_pretrained()
+    return torch.tensor(embedding_matrix, dtype=torch.float32)
+
 
 # ── Training & Evaluation ────────────────────────────────────────────────────
 
@@ -306,24 +371,6 @@ def evaluate(model, loader, criterion, device) -> tuple[float, float]:
     accuracy = total_correct / total_samples # Accuracy for the entire epoch
 
     return avg_loss, accuracy
-
-
-# ── GloVe ────────────────────────────────────────────────────────────────────
-
-def load_glove(glove_path, word_to_idx, embed_dim=100):
-    """
-    Build an embedding matrix from a GloVe file.
-
-    For each word in our vocabulary, if GloVe has a vector for it,
-    use that vector. Otherwise, initialize randomly.
-
-    This is the text equivalent of loading pretrained ResNet weights
-    in Project 3 — we start with knowledge someone else learned.
-
-    Returns numpy array of shape (vocab_size, embed_dim).
-    """
-    # TODO: fill this in (we'll do this when we get to v2)
-    pass
 
 
 # ── Plotting ─────────────────────────────────────────────────────────────────

@@ -14,21 +14,50 @@ class SentimentLSTM(nn.Module):
         -> Linear (N, 1)                  -- raw sentiment logit
     """
 
-    def __init__(self, vocab_size, embed_dim=100, hidden_size=256):
+    def __init__(self, vocab_size, embed_dim=100, hidden_size=256,
+                embedding_matrix=None, freeze_embeddings=False):
         super().__init__()
         self.vocab_size = vocab_size #number of unique words in the vocabulary (include <pad> & <unk>)
         self.embed_dim = embed_dim #dimension of the word vectors (in this case, 100 numbers describing a single word)
         self.hidden_size = hidden_size #dimension of the hidden state ("memory")
         self.pad_idx = 0  # Keep padding token index explicit for readability in forward()
 
-        # Embedding layer: maps each word index to a dense vector.
-        # Input:  (N, seq_len_in_batch)
-        # Output: (N, seq_len_in_batch, embed_dim)
-        self.embedding = nn.Embedding(
-            num_embeddings=vocab_size,
-            embedding_dim=embed_dim,
-            padding_idx=0,  # <pad> token should not learn useful semantics
-        )
+        if embedding_matrix is None:
+
+            # Embedding layer: maps each word index to a dense vector.
+            # Input:  (N, seq_len_in_batch)
+            # Output: (N, seq_len_in_batch, embed_dim)
+            self.embedding = nn.Embedding(
+                num_embeddings=vocab_size,
+                embedding_dim=embed_dim,
+                padding_idx=0,  # <pad> token should not learn useful semantics
+            )
+        else:
+            # Pretrained path: keep the same LSTM classifier, but start the
+            # embedding layer from GloVe vectors instead of random weights.
+            #
+            # Important: embedding_matrix must have shape
+            # (vocab_size, embed_dim), so the embedding output still matches
+            # the LSTM input size defined below.
+            if embedding_matrix.ndim != 2:
+                raise ValueError(
+                    f"embedding_matrix must be 2D, got shape {tuple(embedding_matrix.shape)}"
+                )
+            if embedding_matrix.shape[0] != vocab_size:
+                raise ValueError(
+                    "embedding_matrix row count must match vocab_size: "
+                    f"{embedding_matrix.shape[0]} != {vocab_size}"
+                )
+            if embedding_matrix.shape[1] != embed_dim:
+                raise ValueError(
+                    "embedding_matrix column count must match embed_dim: "
+                    f"{embedding_matrix.shape[1]} != {embed_dim}"
+                )
+            self.embedding = nn.Embedding.from_pretrained(
+                embedding_matrix, 
+                freeze=freeze_embeddings,
+                padding_idx=0,
+            )
 
         # LSTM layer: reads the review left-to-right and updates memory over time.
         # Input to the raw module can be:

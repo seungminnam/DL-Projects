@@ -1,8 +1,13 @@
 # 5. LSTM Sentiment Analysis — IMDB Review Classification
 
-Binary sentiment classification on **IMDB movie reviews** using a **single-layer LSTM** with learned word embeddings.
+Binary sentiment classification on **IMDB movie reviews** using a **single-layer LSTM**.
 
 This project is the next step after the vanilla RNN Shakespeare project: instead of predicting the next character, the model now reads an entire review and predicts a single label: **positive** or **negative**.
+
+The project now has two versions:
+
+- **v1**: learned embeddings from scratch
+- **v2**: pretrained **GloVe** initialization with the rest of the training setup kept fixed
 
 ---
 
@@ -48,7 +53,7 @@ This project also introduces **word embeddings**, so words are no longer represe
   - `0 = negative`
   - `1 = positive`
 
-This is intentionally simple and educational. The point of v1 is to understand sequence modeling, padding, embeddings, and LSTM training before moving on to pretrained embeddings.
+This is intentionally simple and educational. The point of v1 was to understand sequence modeling, padding, embeddings, and LSTM training before moving on to pretrained embeddings in v2.
 
 ---
 
@@ -65,7 +70,7 @@ Input (N, seq_len_in_batch)              # word indices
 
 | Component | Spec |
 |----------|------|
-| Embedding | `nn.Embedding(vocab_size, 100, padding_idx=0)` |
+| Embedding | `nn.Embedding(vocab_size, 100, padding_idx=0)` in v1, `nn.Embedding.from_pretrained(...)` in v2 |
 | LSTM | `nn.LSTM(100, 256, num_layers=1, batch_first=True)` |
 | Classifier | `nn.Linear(256, 1)` |
 | Loss | `BCEWithLogitsLoss` |
@@ -124,61 +129,109 @@ All reviews were still stored with a global maximum length of 256 for simplicity
 
 So a custom `collate_fn` trims each batch to its own maximum real length before the embedding/LSTM step. This keeps the pipeline simple while reducing wasted work.
 
+### 4. Why v2 moved to GloVe
+
+v1 proved that the LSTM classifier itself worked, but the embedding layer still had to learn word meaning from scratch.
+
+That made the next step very natural:
+
+- keep the same LSTM classifier
+- keep the same train/val/test split and training hyperparameters
+- change only the embedding initialization
+
+That is the text analogue of Project 3's transfer learning story. Instead of importing image features from a pretrained ResNet, v2 imports **word-level semantic structure** from pretrained GloVe vectors.
+
+---
+
+## Version Progression
+
+| Version | Main Change | Best Val Loss | Best Val Acc | Final Test Loss | Final Test Acc | Notes |
+|-------|-------|-------|-------|-------|-------|-------|
+| **v1** | learned embeddings from scratch | 0.4376 | 83.08% | 0.4587 | 81.91% | packed sequence + dynamic padding baseline |
+| **v2_glove** | initialize embeddings from GloVe (63.25% vocab coverage) | 0.3533 | 86.68% | 0.3692 | 84.48% | +2.57%p over v1 |
+
+### What v1 taught
+
+v1 established the core baseline:
+
+- the packed LSTM setup was valid
+- padding handling mattered enormously
+- the model could already reach solid performance with simple tokenization and scratch embeddings
+
+But it also revealed a limitation:
+
+> the embedding layer was spending part of its capacity just learning basic word meaning from scratch
+
+That led directly to v2.
+
+### Why that led to v2
+
+v2 asked a very focused question:
+
+> If we keep the LSTM classifier and training policy fixed, how much does a better starting word representation help?
+
+The answer was meaningful:
+
+- GloVe matched **15,814 / 25,002** vocabulary items (**63.25%**)
+- test accuracy improved from **81.91%** to **84.48%**
+- the model started stronger in the very first epochs and generalized better overall
+
 ---
 
 ## Results
 
-### Final v1 Metrics
+### Current Best Result (v2: GloVe)
 
 | Metric | Value |
 |-------|-------|
-| Best Val Loss | **0.4376** |
-| Best Val Accuracy | **83.08%** |
-| Final Test Loss | **0.4587** |
-| Final Test Accuracy | **81.91%** |
-| Early Stopping | epoch 8 |
+| GloVe Coverage | **15,814 / 25,002 words (63.25%)** |
+| Best Val Loss | **0.3533** |
+| Best Val Accuracy | **86.68%** |
+| Final Test Loss | **0.3692** |
+| Final Test Accuracy | **84.48%** |
+| Early Stopping | epoch 6 |
 
-For a first LSTM sentiment baseline with scratch embeddings and simple tokenization, this is a solid result.
+This is a meaningful step up from the v1 baseline while keeping the rest of the architecture and training setup fixed.
 
 ### Training Curves
 
-![Loss and Accuracy Curves](results/v1/loss_acc_curves.png)
+![Loss and Accuracy Curves](results/v2_glove/loss_acc_curves.png)
 
-The curves show a healthy learning pattern:
+The v2 curves show two useful things:
 
-- train accuracy rises steadily into the high 90s
-- validation accuracy peaks around the low 80s
-- after epoch 5, train performance keeps improving while validation loss worsens
+- pretrained embeddings help the model start stronger much earlier
+- overfitting still appears after the best checkpoint, so GloVe improves representation quality but does not remove the need for early stopping
 
-That is a clear overfitting signal, and early stopping helps preserve the best checkpoint.
+So the improvement is real, but it is not magic. Better word vectors help, while sequence-level generalization remains the main challenge.
 
 ---
 
 ## Confusion Matrix Analysis
 
-![Confusion Matrix](results/v1/confusion_matrix.png)
+![Confusion Matrix](results/v2_glove/confusion_matrix.png)
 
-The final confusion matrix was:
+The v2 confusion matrix was:
 
 ```text
-[[9988, 2512],
- [2010, 10490]]
+[[10685, 1815],
+ [2066, 10434]]
 ```
 
 This means:
 
-- **True Negative:** 9,988
-- **False Positive:** 2,512
-- **False Negative:** 2,010
-- **True Positive:** 10,490
+- **True Negative:** 10,685
+- **False Positive:** 1,815
+- **False Negative:** 2,066
+- **True Positive:** 10,434
 
 ### What this tells us
 
-- The model is slightly better at catching **positive** reviews than **negative** ones.
-- Positive recall is about **83.9%**
-- Negative specificity is about **79.9%**
+- Compared with v1, **false positives dropped sharply** (`2512 -> 1815`)
+- False negatives rose only slightly (`2010 -> 2066`)
+- Negative specificity improved to about **85.5%**
+- Positive recall remains about **83.5%**
 
-So the baseline shows a **mild bias toward positive predictions**.
+So v2 is less easily fooled by local positive words inside negative reviews. The classifier becomes more balanced, and the overall gain comes mostly from reducing false positives.
 
 That pattern also appears in the qualitative error analysis below.
 
@@ -188,39 +241,40 @@ That pattern also appears in the qualitative error analysis below.
 
 See the full text report here:
 
-- [Wrong Prediction Report](results/v1/wrong_predictions.md)
+- [Wrong Prediction Report](results/v2_glove/wrong_predictions.md)
 
-The most common error pattern was **false positives**: negative reviews predicted as positive.
+The qualitative errors changed in a useful way from v1 to v2.
 
-### Common false positive pattern
+### Common false positive pattern in v2
 
-Many negative reviews still contained local praise words such as:
+False positives still exist, but they now look more specific:
 
+- `enjoy`
+- `best`
 - `decent`
 - `enjoy`
-- `pretty good`
-- `quite enjoyed`
+- franchise/action praise language
 
-The overall review was still negative, but the model often followed those positive cues too strongly.
+These reviews often sound enthusiastic locally, especially in genre-heavy action or martial-arts discussions, even when the overall judgment is negative.
 
-### Common false negative pattern
+### Common false negative pattern in v2
 
-Some positive reviews discussed heavy or serious topics using words like:
+False negatives more often come from reviews whose wording is formal, socially serious, or thematically heavy:
 
 - `controversial`
 - `lack`
-- `dying`
 - `abuse`
+- `hypocrisy`
 
-In those cases, the model sometimes followed the negative surface vocabulary more than the overall positive judgment.
+In those cases, the model sometimes follows the emotional tone of the vocabulary more than the final positive evaluation.
 
 ### Takeaway
 
-The baseline LSTM is already learning useful sentiment features, but it still struggles with:
+GloVe helped the model understand word meaning better, but it still struggles with:
 
 - mixed sentiment
 - contrastive phrasing
-- reviews where local wording and final sentiment do not align cleanly
+- reviews where topic vocabulary and final sentiment do not align cleanly
 
 ---
 
@@ -244,6 +298,12 @@ The shift is not just from one architecture to another. It is also a shift from 
 **Padding can quietly break sequence classification.**  
 The first implementation looked reasonable but produced almost random performance because the final hidden state was taken after long padding tails. Packed sequences fixed the real problem.
 
+**A fair comparison is worth preserving.**  
+v2 kept the split, optimizer, learning rate, patience, epoch ceiling, and LSTM architecture fixed. That makes the gain from GloVe much easier to interpret honestly.
+
+**Pretrained embeddings gave a real head start.**  
+GloVe covered 63.25% of the vocabulary and improved test accuracy by **+2.57%p**. The model started stronger in the earliest epochs and ended with a clearly better final result.
+
 **The right metric depends on the task.**  
 Perplexity was meaningful for next-character prediction. For IMDB sentiment, the right tools are loss, accuracy, confusion matrix, and qualitative error analysis.
 
@@ -254,38 +314,45 @@ Character one-hot vectors were acceptable in the Shakespeare project because the
 This project uses whitespace tokenization and a fixed top-25k vocabulary, but it still exposes the important ideas: vocab building, unknown tokens, padding, variable-length batches, and sequence summarization.
 
 **Error analysis matters more than a single accuracy number.**  
-The confusion matrix and wrong-prediction report showed that the baseline is not randomly wrong. It tends to be overly influenced by local sentiment words, especially when the review contains mixed or contrastive phrasing.
+v1 showed a clear false-positive bias. v2 reduced that bias, but the wrong-prediction report still shows failure cases around mixed sentiment, formal tone, and socially heavy wording.
 
 ---
 
-## What's Next: Pretrained Word Embeddings
+## What's Next
 
-v1 trains embeddings from scratch. The next step is to inject prior linguistic knowledge through **GloVe**.
+Now that v2 has shown a meaningful gain from pretrained word vectors, the next question is no longer "should we use pretrained embeddings?" but rather:
 
-That is the text equivalent of what transfer learning did in Project 3:
+> what should the next version change while keeping the comparison interpretable?
 
-- Project 3: pretrained ResNet features for images
-- Project 5 v2: pretrained word vectors for text
+The most natural candidates are:
 
-The core question for v2 will be:
+- compare **frozen vs trainable** GloVe embeddings
+- test a **bidirectional LSTM**
+- try a slightly stronger tokenizer or vocabulary policy
 
-> If the baseline LSTM already works, how much can pretrained embeddings improve generalization?
+The important part is to keep the version story clean:
 
----
+- **v1** taught that padding correctness was essential
+- **v2** showed that better word representations improved generalization
+- the next version should isolate one new idea just as clearly
 
 ## How to Run
 
 ```bash
-# From the 5_LSTM_Sentiment/ directory
+# From the 5_LSTM_Sentiment/ directory (v1 baseline)
 python scripts/train.py
 
-# Resume from a checkpoint
+# Resume v1
 python scripts/train.py --resume-from results/v1/best_model.pth
+
+# Run v2 with pretrained GloVe embeddings
+python scripts/train_v2_glove.py
+
+# Resume v2
+python scripts/train_v2_glove.py --resume-from results/v2_glove/best_model.pth
 ```
 
-Artifacts are saved to `results/v1/`:
+Artifacts are saved to version-specific folders:
 
-- `best_model.pth`
-- `loss_acc_curves.png`
-- `confusion_matrix.png`
-- `wrong_predictions.md`
+- `results/v1/`
+- `results/v2_glove/`

@@ -150,15 +150,15 @@
 <div class="hero">
   <div class="badge">Project 5 of 5</div>
   <h1><span>LSTM Sentiment</span></h1>
-  <p class="subtitle">IMDB review classification with learned word embeddings, packed sequences, and error analysis focused on mixed-sentiment text. This is the shift from sequence generation to sequence understanding.</p>
+  <p class="subtitle">IMDB review classification with a packed LSTM baseline in v1 and pretrained GloVe embeddings in v2. This page tracks the move from sequence generation to sequence understanding, then from scratch word representations to transferred semantic priors.</p>
 </div>
 
 <div class="stats-bar">
-  <div class="stat"><div class="num brick">81.91%</div><div class="label">Test Accuracy</div></div>
-  <div class="stat"><div class="num blue">83.08%</div><div class="label">Best Val Accuracy</div></div>
+  <div class="stat"><div class="num brick">84.48%</div><div class="label">Best Test Accuracy</div></div>
+  <div class="stat"><div class="num blue">86.68%</div><div class="label">Best Val Accuracy</div></div>
   <div class="stat"><div class="num purple">2.87M</div><div class="label">Parameters</div></div>
-  <div class="stat"><div class="num cyan">25K</div><div class="label">Vocabulary</div></div>
-  <div class="stat"><div class="num green">8</div><div class="label">Epochs (Early Stop)</div></div>
+  <div class="stat"><div class="num cyan">63.25%</div><div class="label">GloVe Coverage</div></div>
+  <div class="stat"><div class="num green">6</div><div class="label">Epochs (Early Stop)</div></div>
 </div>
 
 <div class="container">
@@ -241,14 +241,23 @@
 
   <div class="section" id="results">
     <h2>Training Results</h2>
+    <div class="card">
+      <h3>Version Comparison</h3>
+      <table>
+        <tr><th>Version</th><th>Main Change</th><th>Best Val Acc</th><th>Test Acc</th><th>Interpretation</th></tr>
+        <tr><td>v1</td><td>Learn embeddings from scratch</td><td>83.08%</td><td>81.91%</td><td>Packed sequences made the baseline viable</td></tr>
+        <tr><td>v2_glove</td><td>Initialize embeddings from pretrained GloVe</td><td>86.68%</td><td>84.48%</td><td>Better word representations improved early learning and final accuracy</td></tr>
+      </table>
+      <p style="color: var(--text2); margin-top: 14px;">This comparison is intentionally fair: same split, same sequence length, same hidden size, same optimizer, same learning rate, and the same <code>EPOCHS=15 / PATIENCE=3</code>. The main change in v2 is the embedding initialization.</p>
+    </div>
     <div class="img-grid">
       <div class="img-card">
-        <img src="results/v1/loss_acc_curves.png" alt="Loss and Accuracy Curves">
-        <div class="caption">The baseline trains cleanly, peaks around epoch 5, and then starts to overfit. Train accuracy keeps rising while validation loss worsens, so early stopping preserves the best checkpoint.</div>
+        <img src="results/v2_glove/loss_acc_curves.png" alt="Loss and Accuracy Curves">
+        <div class="caption">With GloVe initialization, the model starts stronger much earlier and reaches a better final result. Overfitting still appears after the best checkpoint, so pretrained embeddings help representation quality without removing the need for early stopping.</div>
       </div>
       <div class="img-card">
-        <img src="results/v1/confusion_matrix.png" alt="Confusion Matrix">
-        <div class="caption">The model performs solidly overall, but the matrix reveals a small bias toward positive predictions: false positives are slightly more common than false negatives.</div>
+        <img src="results/v2_glove/confusion_matrix.png" alt="Confusion Matrix">
+        <div class="caption">Compared with v1, v2 sharply reduces false positives. The classifier becomes more balanced overall, suggesting that pretrained word vectors help it resist shallow local praise cues inside otherwise negative reviews.</div>
       </div>
     </div>
   </div>
@@ -260,28 +269,28 @@
         <h3>Confusion Pattern</h3>
         <table>
           <tr><th>Cell</th><th>Count</th></tr>
-          <tr><td>True Negative</td><td>9,988</td></tr>
-          <tr><td>False Positive</td><td>2,512</td></tr>
-          <tr><td>False Negative</td><td>2,010</td></tr>
-          <tr><td>True Positive</td><td>10,490</td></tr>
+          <tr><td>True Negative</td><td>10,685</td></tr>
+          <tr><td>False Positive</td><td>1,815</td></tr>
+          <tr><td>False Negative</td><td>2,066</td></tr>
+          <tr><td>True Positive</td><td>10,434</td></tr>
         </table>
-        <p style="color: var(--text2); margin-top: 12px;">Positive recall is stronger than negative specificity, so the baseline is slightly more willing to call a review positive.</p>
+        <p style="color: var(--text2); margin-top: 12px;">The key shift from v1 is that false positives fall from 2,512 to 1,815. False negatives rise only slightly, so the model becomes less overly optimistic and more balanced overall.</p>
       </div>
       <div class="card">
         <h3>Qualitative Pattern</h3>
-        <p style="color: var(--text2);">False positives often contained local praise words such as <code>decent</code>, <code>enjoy</code>, or <code>pretty good</code> even when the final verdict was negative.</p>
-        <p style="color: var(--text2);">False negatives often contained heavy topical words like <code>controversial</code>, <code>lack</code>, or <code>abuse</code> inside reviews that were actually positive overall.</p>
+        <p style="color: var(--text2);">False positives still exist, but in v2 they are more concentrated in genre-heavy action or franchise reviews where local praise language is strong even though the final judgment is negative.</p>
+        <p style="color: var(--text2);">False negatives now stand out more clearly in formal, socially serious, or thematically heavy reviews whose wording feels negative even when the final verdict is positive.</p>
         <div class="error-grid">
           <div class="error-panel">
             <h4>False Positives</h4>
-            <p>Negative reviews predicted as positive. Most of these contain local praise words or partial compliments that seem to outweigh the final negative judgment.</p>
+            <p>Negative reviews predicted as positive. These usually contain local praise or genre enthusiasm that seems to outweigh the final negative judgment.</p>
 
             <details class="example">
               <summary>
                 Example 1
                 <span class="meta">
                   <span class="pill fp">Negative -&gt; Positive</span>
-                  <span class="pill conf">Confidence 1.00</span>
+                  <span class="pill conf">Confidence 0.98</span>
                 </span>
               </summary>
               <p><strong>Excerpt:</strong> "if you haven't enjoyed a van damme movie ... you probably will not like this movie ... i enjoy these kinds ..."</p>
@@ -292,10 +301,10 @@
                 Example 2
                 <span class="meta">
                   <span class="pill fp">Negative -&gt; Positive</span>
-                  <span class="pill conf">Confidence 0.94</span>
+                  <span class="pill conf">Confidence 0.96</span>
                 </span>
               </summary>
-              <p><strong>Excerpt:</strong> "i had high hopes for this one ... the lamest movie name ever ... by the numbers action flick ..."</p>
+              <p><strong>Excerpt:</strong> "has made some of the best western martial arts action movies ever produced ... action classics ... real passion for ..."</p>
             </details>
 
             <details class="example">
@@ -303,7 +312,7 @@
                 Example 3
                 <span class="meta">
                   <span class="pill fp">Negative -&gt; Positive</span>
-                  <span class="pill conf">Confidence 0.91</span>
+                  <span class="pill conf">Confidence 0.87</span>
                 </span>
               </summary>
               <p><strong>Excerpt:</strong> "was a decent film, but i have a few issues with this film ... i have a problem with ..."</p>
@@ -312,17 +321,17 @@
 
           <div class="error-panel">
             <h4>False Negatives</h4>
-            <p>Positive reviews predicted as negative. These often use heavy, serious, or socially dark vocabulary even though the final evaluation is clearly favorable.</p>
+            <p>Positive reviews predicted as negative. These often use formal, socially serious, or thematically heavy wording even though the final evaluation is favorable.</p>
 
             <details class="example">
               <summary>
                 Example 1
                 <span class="meta">
                   <span class="pill fn">Positive -&gt; Negative</span>
-                  <span class="pill conf">Confidence 0.68</span>
+                  <span class="pill conf">Confidence 0.94</span>
                 </span>
               </summary>
-              <p><strong>Excerpt:</strong> "this is my first ... film ... allegorical trial by fire ..." A positive review, but the wording is formal and thematically heavy.</p>
+              <p><strong>Excerpt:</strong> "overall, a well done movie ... i came away with something more than i gone in with ..."</p>
             </details>
 
             <details class="example">
@@ -330,10 +339,10 @@
                 Example 2
                 <span class="meta">
                   <span class="pill fn">Positive -&gt; Negative</span>
-                  <span class="pill conf">Confidence 0.55</span>
+                  <span class="pill conf">Confidence 0.84</span>
                 </span>
               </summary>
-              <p><strong>Excerpt:</strong> "this movie is a masterpiece ... i'd recommend to buy this movie on dvd ..." The final verdict is clearly positive, but the sentence structure is more complex than a simple praise review.</p>
+              <p><strong>Excerpt:</strong> "it is an amazing film because it dares to investigate the hypocrisy ... concerning their women and sexuality ..."</p>
             </details>
 
             <details class="example">
@@ -341,10 +350,10 @@
                 Example 3
                 <span class="meta">
                   <span class="pill fn">Positive -&gt; Negative</span>
-                  <span class="pill conf">Confidence 0.93</span>
+                  <span class="pill conf">Confidence 0.94</span>
                 </span>
               </summary>
-              <p><strong>Excerpt:</strong> "bold movie ... openly depict lesbian tendencies ... added substance ..." Socially serious wording seems to have pulled the prediction toward negative.</p>
+              <p><strong>Excerpt:</strong> "the theme is controversial ... lack of continuity and lack of ..."</p>
             </details>
           </div>
         </div>
@@ -359,7 +368,7 @@
         <tr><th>Parameter</th><th>Value</th><th>Why</th></tr>
         <tr><td>Vocabulary Size</td><td>25,000 + 2 special tokens</td><td>Large enough to cover common review language while staying manageable</td></tr>
         <tr><td>Max Length</td><td>256 tokens</td><td>Reasonable ceiling for an educational baseline</td></tr>
-        <tr><td>Embedding Dim</td><td>100</td><td>Good compromise; also matches planned GloVe 100d in v2</td></tr>
+        <tr><td>Embedding Dim</td><td>100</td><td>Good compromise, and it matches the pretrained GloVe 100d vectors used in v2</td></tr>
         <tr><td>Hidden Size</td><td>256</td><td>Enough capacity for sequence classification without making v1 too heavy</td></tr>
         <tr><td>Batch Size</td><td>64</td><td>Stable and consistent with previous projects</td></tr>
         <tr><td>Optimizer</td><td>Adam (lr=0.001)</td><td>Reliable baseline optimizer for NLP classification</td></tr>
@@ -456,7 +465,7 @@
         </div>
         <div class="why-here">
           <div class="why-label">Why in this project</div>
-          <p>This single change rescued the baseline from near-random behavior to a usable result around 82% test accuracy. It was not a small optimization; it was a correctness fix.</p>
+          <p>This single change rescued the baseline from near-random behavior to a usable result above 81% test accuracy. It was not a small optimization; it was a correctness fix.</p>
         </div>
       </div>
     </div>
@@ -478,6 +487,24 @@
         </div>
       </div>
     </div>
+
+    <div class="concept">
+      <div class="concept-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="concept-icon" style="background: rgba(181,80,50,0.15); color: var(--brick);">G</div>
+        <div>
+          <h3>GloVe Initialization</h3>
+          <div class="one-liner">Pretrained word vectors give the embedding layer a stronger semantic starting point</div>
+        </div>
+        <div class="concept-toggle">&#x25BC;</div>
+      </div>
+      <div class="concept-body">
+        <p>v2 keeps the same LSTM classifier but changes how the embedding layer starts. Instead of learning every word representation from scratch, it loads GloVe vectors for the words it can match and leaves the rest random.</p>
+        <div class="why-here">
+          <div class="why-label">Why in this project</div>
+          <p>GloVe matched 15,814 of the 25,002 vocabulary entries (63.25%). That was enough to improve early learning and raise test accuracy from 81.91% to 84.48% without changing the rest of the architecture.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="section" id="lessons">
@@ -495,7 +522,12 @@
 
     <div class="lesson">
       <div class="lesson-title">Error analysis revealed a real bias pattern</div>
-      <div class="lesson-body">The baseline is not randomly wrong. It tends to over-follow local positive cues, which shows up as a mild false-positive bias in the confusion matrix.</div>
+      <div class="lesson-body">v1 leaned too positive. v2 reduced that false-positive bias substantially, which suggests that better word representations help the model resist shallow local praise cues.</div>
+    </div>
+
+    <div class="lesson">
+      <div class="lesson-title">Pretrained embeddings help, but they do not solve everything</div>
+      <div class="lesson-body">GloVe gave a meaningful gain over the baseline, especially early in training, but the model still struggles with formal tone, mixed sentiment, and socially heavy positive reviews.</div>
     </div>
 
     <div class="lesson">
@@ -504,8 +536,8 @@
     </div>
 
     <div class="lesson">
-      <div class="lesson-title">LSTM is not the end of the story</div>
-      <div class="lesson-body">The baseline already works, but it still misreads contrastive and mixed-sentiment reviews. That makes pretrained embeddings in v2 a meaningful next experiment rather than a cosmetic upgrade.</div>
+      <div class="lesson-title">v2 improves the baseline, but sequence understanding is still the real bottleneck</div>
+      <div class="lesson-body">The main gain from v2 came from better word representations. The next major jump will likely require a stronger sequence encoder or a cleaner representation experiment rather than just longer training.</div>
     </div>
   </div>
 
@@ -518,7 +550,7 @@
         <tr><td style="color: var(--yellow);">2. CIFAR-10 CNN</td><td>Image Classification</td><td>81.04% acc</td><td>BatchNorm, LR Scheduler, scratch ceiling</td></tr>
         <tr><td style="color: var(--green);">3. Transfer Learning</td><td>Image Classification</td><td>96.60% acc</td><td>ResNet18, freeze/unfreeze, fine-tuning</td></tr>
         <tr><td style="color: var(--accent2);">4. RNN Shakespeare</td><td>Text Generation</td><td>6.33 perplexity</td><td>Hidden state, BPTT, temperature</td></tr>
-        <tr><td style="color: var(--brick);">5. LSTM Sentiment</td><td>Text Classification</td><td>81.91% acc</td><td>Word embeddings, packed LSTM, many-to-one prediction</td></tr>
+        <tr><td style="color: var(--brick);">5. LSTM Sentiment</td><td>Text Classification</td><td>84.48% acc</td><td>Word embeddings, packed LSTM, GloVe initialization</td></tr>
       </table>
       <p style="color: var(--text3); font-size: 0.85rem; margin-top: 12px;">From image classification to sequence generation, then from sequence generation to sequence understanding. Each project responds directly to a limitation exposed by the previous one.</p>
     </div>
@@ -527,7 +559,7 @@
   <div class="section">
     <h2>What's Next</h2>
     <div class="card">
-      <p style="color: var(--text2);">v1 learned embeddings from scratch. The next step is to compare this baseline against <strong style="color: var(--text);">pretrained GloVe embeddings</strong>. That will make the next version the text equivalent of what transfer learning did for images in Project 3.</p>
+      <p style="color: var(--text2);">v2 showed that pretrained GloVe embeddings matter. The next question is no longer whether transfer helps, but <strong style="color: var(--text);">which next change should be isolated cleanly</strong>: freeze vs trainable GloVe, a bidirectional LSTM, or a stronger tokenization setup.</p>
     </div>
   </div>
 
